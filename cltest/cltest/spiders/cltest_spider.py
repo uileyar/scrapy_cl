@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8
 import sys
+import urllib
+import urlparse
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -52,7 +54,13 @@ class CltestSpider(scrapy.Spider):
 
 
     def parse_download(self, response):
+        #save_file(response.url.replace('/', '-'), response.body)
         #print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
         item = response.meta['item']
-        save_file(response.url.replace('/', '-'), response.body)
+        query = {}
+        action = response.css('form::attr(action)').extract()[0]
+        for input in response.css('input'):
+            query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
+        item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
+        #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         return item
