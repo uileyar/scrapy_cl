@@ -10,6 +10,19 @@ import scrapy
 from cltest.items import CltestItem
 from util import *
 
+ad_img_list =[
+    'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
+]
+def get_pic_url(div):
+    for src in div.css('img::attr(src)').extract():
+        if '.jpg' not in src:
+            continue
+        if src in ad_img_list:
+            continue
+        if 'http://oi' in src:
+            continue
+        return src
+
 
 class CltestSpider(scrapy.Spider):
     name = "cl"
@@ -41,7 +54,8 @@ class CltestSpider(scrapy.Spider):
         div = response.css('div.tpc_content.do_not_catch')
         if div:
             item['detail_url'] = response.url
-            item['pic_url'] = div.css('img::attr(src)').extract()[0]
+
+            item['pic_url'] = get_pic_url(div)
             for a in div.css('a'):
                 for url in a.css("::text").extract():
                     if 'http://www.' in url:
