@@ -67,7 +67,7 @@ class CltestSpider(scrapy.Spider):
                         url = url[offer:]
                         item['download_url'] = url
                         meta = {'item': item}
-                        self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
+                        #self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
                         yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url'):
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
@@ -83,5 +83,5 @@ class CltestSpider(scrapy.Spider):
             query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
         item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
         #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
-        self.logger.info('item={0}'.format(item))
+        #self.logger.info('item={0}'.format(item))
         return item
