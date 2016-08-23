@@ -6,14 +6,17 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 import pymongo
+import scrapy
 from spiders.util import *
+from scrapy.pipelines.images import ImagesPipeline, FilesPipeline
 from scrapy.exceptions import DropItem
 import httplib2
+import shutil
 
 
 def get_file(url, file_path):
     http = httplib2.Http(timeout=60)
-    for retry in range(3):
+    for retry in range(5):
         try:
             (resp, content) = http.request(url, "GET")
             if resp['status'] != '200':
@@ -40,7 +43,7 @@ class CltestPipeline(object):
             mongo_server=crawler.settings.get('MONGO_SERVER'),
             mongo_port=crawler.settings.get('MONGO_PORT', 21005),
             mongo_db=crawler.settings.get('MONGO_DB'),
-            root_path=crawler.settings.get('FILES_STORE')
+            root_path=crawler.settings.get('CL_STORE')
         )
 
     def open_spider(self, spider):
@@ -57,8 +60,42 @@ class CltestPipeline(object):
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
         if it:
             raise DropItem()
-
-        get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
-        get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
+        logging.info('open CltestPipeline:process_item: url={0}'.format(item.get('detail_url')))
+        #get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
+        #get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
         # self.db[collection_name].insert(dict(item))
+        return item
+
+
+class ClImagePipeline(ImagesPipeline):
+    def get_media_requests(self, item, info):
+        logging.info('open ClImagePipeline:get_media_requests')
+        for image_url in item['image_urls']:
+            yield scrapy.Request(image_url)
+
+    def item_completed(self, results, item, info):
+        logging.info('open ClImagePipeline:item_completed')
+        file_paths = [x['path'] for ok, x in results if ok]
+        if not file_paths:
+            raise DropItem("Item contains no image file")
+
+        for file in file_paths:
+            shutil.copy(file, os.path.join('/data/scrapy/download', item.get('title').replace('/', '-') + '.jpg'))
+        return item
+
+
+class ClFilePipeline(FilesPipeline):
+    def get_media_requests(self, item, info):
+        logging.info('open ClFilePipeline:get_media_requests')
+        for file_url in item['file_urls']:
+            yield scrapy.Request(file_url)
+
+    def item_completed(self, results, item, info):
+        logging.info('open ClFilePipeline:item_completed')
+        file_paths = [x['path'] for ok, x in results if ok]
+        if not file_paths:
+            raise DropItem("Item contains no torrent file")
+
+        for file in file_paths:
+            shutil.copy(file, os.path.join('/data/scrapy/download', item.get('title').replace('/', '-') + '.torrent'))
         return item

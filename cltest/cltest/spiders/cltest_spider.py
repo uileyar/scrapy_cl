@@ -60,6 +60,7 @@ class CltestSpider(scrapy.Spider):
         if div:
             item['detail_url'] = response.url
             item['pic_url'] = get_pic_url(div)
+            item['image_urls'] = [item['pic_url']]
             for a in div.css('a'):
                 for url in a.css("::text").extract():
                     if 'http://www.' in url:
@@ -82,6 +83,7 @@ class CltestSpider(scrapy.Spider):
         for input in response.css('input'):
             query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
         item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
+        item['file_urls'] = [item['torrent_url']]
         #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         #self.logger.info('item={0}'.format(item))
         return item

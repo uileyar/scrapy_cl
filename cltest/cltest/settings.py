@@ -65,6 +65,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+    'scrapy.pipelines.images.ImagesPipeline': 1,
+    'scrapy.pipelines.files.FilesPipeline': 2,
     'cltest.pipelines.CltestPipeline': 300,
 }
 
@@ -92,4 +94,12 @@ ITEM_PIPELINES = {
 MONGO_SERVER = 'localhost'
 MONGO_PORT = 21005
 MONGO_DB = 'cl'
-FILES_STORE = '/data/scrapy/download'
+
+CL_STORE = '/data/scrapy/download'
+FILES_STORE = '/data/scrapy/tmp/file'
+IMAGES_STORE = '/data/scrapy/tmp/img'
+
+DOWNLOAD_TIMEOUT = 180
+LOG_LEVEL = 'INFO'
+
+
