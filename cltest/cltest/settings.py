@@ -67,6 +67,8 @@ ROBOTSTXT_OBEY = True
 ITEM_PIPELINES = {
     'scrapy.pipelines.images.ImagesPipeline': 1,
     'scrapy.pipelines.files.FilesPipeline': 2,
+    #'cltest.pipelines.ClImagePipeline': 5,
+    #'cltest.pipelines.ClFilePipeline': 6,
     'cltest.pipelines.CltestPipeline': 300,
 }
 
@@ -92,10 +94,11 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 MONGO_SERVER = 'localhost'
-MONGO_PORT = 21005
+MONGO_PORT = 21008
 MONGO_DB = 'cl'
 
-CL_STORE = '/data/scrapy/download'
+
+CL_STORE = '/data/scrapy'
 FILES_STORE = '/data/scrapy/tmp/file'
 IMAGES_STORE = '/data/scrapy/tmp/img'
 

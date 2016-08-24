@@ -31,19 +31,24 @@ def get_file(url, file_path):
 
 
 class CltestPipeline(object):
-    def __init__(self, mongo_server, mongo_port, mongo_db, root_path):
+    def __init__(self, mongo_server, mongo_port, mongo_db, file_path, img_path, root_path):
         self.mongo_server = mongo_server
         self.mongo_port = mongo_port
         self.mongo_db = mongo_db
+        self.file_path = file_path
+        self.img_path = img_path
         self.root_path = root_path
+
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(
             mongo_server=crawler.settings.get('MONGO_SERVER'),
-            mongo_port=crawler.settings.get('MONGO_PORT', 21005),
+            mongo_port=crawler.settings.get('MONGO_PORT', 21008),
             mongo_db=crawler.settings.get('MONGO_DB'),
-            root_path=crawler.settings.get('CL_STORE')
+            file_path=crawler.settings.get('FILES_STORE'),
+            img_path=crawler.settings.get('IMAGES_STORE'),
+            root_path=crawler.settings.get('CL_STORE'),
         )
 
     def open_spider(self, spider):
@@ -56,44 +61,75 @@ class CltestPipeline(object):
         self.connection.close()
 
     def process_item(self, item, spider):
+        img_flag = file_flag = False
         collection_name = item.__class__.__name__.lower()
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
         if it:
             raise DropItem()
-        logging.info('open CltestPipeline:process_item: url={0}'.format(item.get('detail_url')))
+        #logging.info('item={0}'.format(item))
+        des_dir = os.path.join(self.root_path, item.get('type'))
+        ensure_dir(des_dir)
+
+        for img in item.get('images'):
+            src_file = os.path.join(self.img_path, img.get('path'))
+            des_file = os.path.join(des_dir, item.get('title')[0:min(240, len(item.get('title')))].replace('/', '-')) + '.jpg'
+            shutil.copy(src_file,  des_file)
+            img_flag = True
+        for file in item.get('files'):
+            src_file = os.path.join(self.file_path, file.get('path'))
+            des_file = os.path.join(des_dir, item.get('title')[0:min(240, len(item.get('title')))].replace('/', '-')) + '.torrent'
+            shutil.copy(src_file, des_file)
+            file_flag = True
+
         #get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         #get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
-        # self.db[collection_name].insert(dict(item))
+        if img_flag and file_flag:
+            #self.db[collection_name].insert(dict(item))
+            pass
         return item
 
 
 class ClImagePipeline(ImagesPipeline):
+    def __init__(self, file_path, img_path, root_path):
+        self.file_path = file_path
+        self.img_path = img_path
+        self.root_path = root_path
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(
+            file_path=crawler.settings.get('FILES_STORE'),
+            img_path=crawler.settings.get('IMAGES_STORE'),
+            root_path=crawler.settings.get('CL_STORE')
+        )
+
     def get_media_requests(self, item, info):
-        logging.info('open ClImagePipeline:get_media_requests')
         for image_url in item['image_urls']:
-            yield scrapy.Request(image_url)
+            logging.info('get image_url={0}'.format(image_url))
+            yield scrapy.Request(str(image_url), dont_filter=True)
 
     def item_completed(self, results, item, info):
-        logging.info('open ClImagePipeline:item_completed')
         file_paths = [x['path'] for ok, x in results if ok]
         if not file_paths:
+            logging.warning('no img results={0}'.format(results))
             raise DropItem("Item contains no image file")
 
         for file in file_paths:
-            shutil.copy(file, os.path.join('/data/scrapy/download', item.get('title').replace('/', '-') + '.jpg'))
+            src_file = os.path.join(self.img_path, file)
+            shutil.copy(src_file, os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         return item
 
 
 class ClFilePipeline(FilesPipeline):
     def get_media_requests(self, item, info):
-        logging.info('open ClFilePipeline:get_media_requests')
         for file_url in item['file_urls']:
+            logging.debug('get file_url={0}'.format(file_url))
             yield scrapy.Request(file_url)
 
     def item_completed(self, results, item, info):
-        logging.info('open ClFilePipeline:item_completed')
         file_paths = [x['path'] for ok, x in results if ok]
         if not file_paths:
+            #logging.warning('no file results={0}, item={1}, info={2}'.format(results, item, info))
             raise DropItem("Item contains no torrent file")
 
         for file in file_paths:

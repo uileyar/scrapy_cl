@@ -17,6 +17,12 @@ ad_img_list =[
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
 ]
 
+def get_type(url):
+    if 'fid=15' in url:
+        return 'youma'
+    elif 'fid=2' in url:
+        return 'wuma'
+    return 'hehe'
 
 def get_pic_url(div):
     for src in div.css('img::attr(src)').extract():
@@ -26,7 +32,7 @@ def get_pic_url(div):
             continue
         if 'http://oi' in src:
             continue
-        return src
+        return str(src)
 
 
 class CltestSpider(scrapy.Spider):
@@ -34,23 +40,39 @@ class CltestSpider(scrapy.Spider):
     allowed_domains = ["cl.wrvhb.com"]
     start_urls = [
         "http://cl.wrvhb.com/thread0806.php?fid=15",
+        'http://cl.wrvhb.com/thread0806.php?fid=2',
 
     ]
 
     def parse(self, response):
-        # save_file(response.url.split("/")[-2] + '.html', response.body)
-        self.logger.info('start parse')
+        #save_file(response.url.split("/")[-2] + '.html', response.body)
+        self.logger.info('start url={0}'.format(response.url))
+
         for sel in response.css('tbody:last-of-type tr.tr3.t_one'):
             data = sel.css('td h3 a')
             if not data:
                 continue
             item = CltestItem()
             item['title'] = data.css("::text").extract()[0]
+            item['type'] = get_type(response.url)
             url = data.css("::attr(href)").extract()[0]
             url = response.urljoin(url)
             # print url
             meta = {'item': item}
             yield scrapy.Request(url, callback=self.parse_detail, meta=meta)
+
+        for next in response.css('div.pages a'):
+            href = next.css("::attr(href)")
+            if href and ('javascript' not in href.extract()[0]):
+                url = response.urljoin(href.extract()[0])
+                try:
+                    num = int(next.css("::text").extract()[0])
+                except Exception as e:
+                    continue
+                if num < 3:
+                    self.logger.info('start next url={0}'.format(url))
+                    yield scrapy.Request(url, callback=self.parse)
+                break
 
     def parse_detail(self, response):
         # save_file(response.url.replace('/', '-'), response.body)
@@ -79,11 +101,15 @@ class CltestSpider(scrapy.Spider):
         #print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
         item = response.meta['item']
         query = {}
-        action = response.css('form::attr(action)').extract()[0]
-        for input in response.css('input'):
-            query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
-        item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
-        item['file_urls'] = [item['torrent_url']]
+        try:
+            action = response.css('form::attr(action)').extract()[0]
+            for input in response.css('input'):
+                query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
+            item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
+            item['file_urls'] = [item['torrent_url']]
+        except Exception as e:
+            self.logger.error('parse_download fail:url={0}'.format(response.url))
+
         #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         #self.logger.info('item={0}'.format(item))
         return item

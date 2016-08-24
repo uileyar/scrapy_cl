@@ -16,6 +16,7 @@ class CltestItem(scrapy.Item):
     local_pic_path = scrapy.Field()
     download_url = scrapy.Field()
     torrent_url = scrapy.Field()
+    type = scrapy.Field()
 
     image_urls = scrapy.Field()
     images = scrapy.Field()

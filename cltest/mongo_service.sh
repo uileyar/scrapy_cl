@@ -1,13 +1,7 @@
 #! /bin/bash
 
 log_prefix=/data/scrapy
-port=21005
-
-if [ $2 == "test" ]
-then
-log_prefix=/data/scrapy-test
-port=21006
-fi
+port=21008
 
 start_mongo() {
     echo "Starting mongo..."
