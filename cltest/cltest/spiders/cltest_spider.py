@@ -17,12 +17,16 @@ ad_img_list =[
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
 ]
 
+
 def get_type(url):
-    if 'fid=15' in url:
+    query = urlparse.urlparse(url).query
+    fid = urlparse.parse_qs(query, True).get('fid')
+    if fid[0] == '15':
         return 'youma'
-    elif 'fid=2' in url:
+    elif fid[0] == '2':
         return 'wuma'
     return 'hehe'
+
 
 def get_pic_url(div):
     for src in div.css('img::attr(src)').extract():
@@ -35,7 +39,16 @@ def get_pic_url(div):
         return str(src)
 
 
+def get_page(url):
+    query = urlparse.urlparse(url).query
+    page = urlparse.parse_qs(query, True).get('page')
+    if page:
+        return int(page[0])
+    return 0
+
+
 class CltestSpider(scrapy.Spider):
+    MAX_PAGE = 2
     name = "cl"
     allowed_domains = ["cl.wrvhb.com"]
     start_urls = [
@@ -62,16 +75,16 @@ class CltestSpider(scrapy.Spider):
             yield scrapy.Request(url, callback=self.parse_detail, meta=meta)
 
         for next in response.css('div.pages a'):
+            if next.css("::text").extract() and u'下一頁' != next.css("::text").extract()[0]:
+                continue
             href = next.css("::attr(href)")
-            if href and ('javascript' not in href.extract()[0]):
-                url = response.urljoin(href.extract()[0])
-                try:
-                    num = int(next.css("::text").extract()[0])
-                except Exception as e:
-                    continue
-                if num < 3:
-                    self.logger.info('start next url={0}'.format(url))
-                    yield scrapy.Request(url, callback=self.parse)
+            if not href:
+                continue
+            url = response.urljoin(href.extract()[0])
+            page = get_page(url)
+            if page and page <= self.MAX_PAGE:
+                self.logger.info('start next url={0}'.format(url))
+                yield scrapy.Request(url, callback=self.parse)
                 break
 
     def parse_detail(self, response):
@@ -85,7 +98,7 @@ class CltestSpider(scrapy.Spider):
             item['image_urls'] = [item['pic_url']]
             for a in div.css('a'):
                 for url in a.css("::text").extract():
-                    if 'http://www.' in url:
+                    if 'http://www.rm' in url:
                         offer = url.find('http://www.')
                         url = url[offer:]
                         item['download_url'] = url
@@ -108,7 +121,7 @@ class CltestSpider(scrapy.Spider):
             item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
             item['file_urls'] = [item['torrent_url']]
         except Exception as e:
-            self.logger.error('parse_download fail:url={0}'.format(response.url))
+            self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
 
         #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         #self.logger.info('item={0}'.format(item))

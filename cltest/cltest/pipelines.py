@@ -72,14 +72,21 @@ class CltestPipeline(object):
 
         for img in item.get('images'):
             src_file = os.path.join(self.img_path, img.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(240, len(item.get('title')))].replace('/', '-')) + '.jpg'
-            shutil.copy(src_file,  des_file)
-            img_flag = True
+            des_file = os.path.join(des_dir, item.get('title')[0:min(90, len(item.get('title')))].replace('/', '-')) + '.jpg'
+            try:
+                shutil.copy(src_file, des_file)
+                img_flag = True
+            except Exception as e:
+                logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
+
         for file in item.get('files'):
             src_file = os.path.join(self.file_path, file.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(240, len(item.get('title')))].replace('/', '-')) + '.torrent'
-            shutil.copy(src_file, des_file)
-            file_flag = True
+            des_file = os.path.join(des_dir, item.get('title')[0:min(90, len(item.get('title')))].replace('/', '-')) + '.torrent'
+            try:
+                shutil.copy(src_file, des_file)
+                file_flag = True
+            except Exception as e:
+                logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 
         #get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         #get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))

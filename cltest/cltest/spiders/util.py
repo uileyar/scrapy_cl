@@ -122,6 +122,14 @@ def save_file(file_path, data):
         f.write(data)
 
 
+def text_overflow(text, max_len=255):
+    if isinstance(text, unicode):
+        text = text.encode('utf-8')
+        if len(text) > max_len:
+            clip_len = len(text) - max_len
+
+
+
 def main():
     # file_walk(ROOT_PATH)
     print md5checksum('/data/Descendants of the Sun E01(Part 1)-360p.MP4')
