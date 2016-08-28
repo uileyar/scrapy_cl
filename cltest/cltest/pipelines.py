@@ -93,6 +93,10 @@ class CltestPipeline(object):
         if img_flag and file_flag:
             #self.db[collection_name].insert(dict(item))
             pass
+        elif not img_flag:
+            logging.error('no img detail_url={0}, pic_url={1}'.format(item.get('detail_url'), item.get('pic_url')))
+        elif not file_flag:
+            logging.error('no torrent detail_url={0}, torrent_url={1}'.format(item.get('detail_url'), item.get('torrent_url')))
         return item
 
 
