@@ -12,13 +12,22 @@ from util import *
 
 # scrapy crawl cl -L INFO
 
+TYPE_YOUMA = 'youma'
+TYPE_YOUMA_ZT = 'youmazhuantie'
+TYPE_WUMA = 'wuma'
+TYPE_WUMA_ZT = 'wumazhuantie'
+TYPE_XINSHIDAI = 'xinshidai'
+TYPE_GAIDAER = 'gaidaer'
+TYPE_DEFAULT = 'hehe'
+
 
 ad_img_list =[
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
 ]
 
 
-def get_pic_url(div):
+def get_image_urls_1(div):
+    img_list = []
     for src in div.css('img::attr(src)').extract():
         if '.jpg' not in src:
             continue
@@ -26,7 +35,32 @@ def get_pic_url(div):
             continue
         if 'http://oi' in src:
             continue
-        return str(src)
+        img_list.append(str(src))
+        break
+    return img_list
+
+
+def get_image_urls_2(div):
+    img_list = []
+    for src in div.css('input::attr(src)').extract():
+        if '.jpg' not in src:
+            continue
+        if src in ad_img_list:
+            continue
+        if 'http://oi' in src:
+            continue
+        img_list.append(str(src))
+    #print img_list
+    return img_list
+
+
+def get_image_urls(div, type):
+    if type in [TYPE_YOUMA, TYPE_YOUMA_ZT, TYPE_WUMA, TYPE_WUMA_ZT]:
+        return get_image_urls_1(div)
+    elif type in [TYPE_XINSHIDAI, TYPE_GAIDAER]:
+        return get_image_urls_2(div)
+    else:
+        return []
 
 
 def get_page(url):
@@ -41,18 +75,18 @@ def get_type(url):
     query = urlparse.urlparse(url).query
     fid = urlparse.parse_qs(query, True).get('fid')
     if fid[0] == '15':
-        return 'youma'
+        return TYPE_YOUMA
     elif fid[0] == '18':
-        return 'youmazhuantie'
+        return TYPE_YOUMA_ZT
     elif fid[0] == '2':
-        return 'wuma'
+        return TYPE_WUMA
     elif fid[0] == '17':
-        return 'wumazhuantie'
+        return TYPE_WUMA_ZT
     elif fid[0] == '8':
-        return 'xinshidai'
+        return TYPE_XINSHIDAI
     elif fid[0] == '16':
-        return 'gaidaer'
-    return 'hehe'
+        return TYPE_GAIDAER
+    return TYPE_DEFAULT
 
 
 class CltestSpider(scrapy.Spider):
@@ -61,12 +95,12 @@ class CltestSpider(scrapy.Spider):
     allowed_domains = ["cl.wrvhb.com"]
     start_urls = [
         #'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
-        'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        #'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
 
         #'http://cl.wrvhb.com/thread0806.php?fid=2',  #yazhouwuma
         #'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
 
-        #'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
+        'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
         #'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
     ]
 
@@ -83,7 +117,7 @@ class CltestSpider(scrapy.Spider):
             item['type'] = get_type(response.url)
             url = data.css("::attr(href)").extract()[0]
             url = response.urljoin(url)
-            # print url
+            self.logger.debug('detail_url={0}'.format(url))
             meta = {'item': item}
             yield scrapy.Request(url, callback=self.parse_detail, meta=meta)
 
@@ -106,8 +140,7 @@ class CltestSpider(scrapy.Spider):
         div = response.css('div.tpc_content.do_not_catch')
         if div:
             item['detail_url'] = response.url
-            item['pic_url'] = get_pic_url(div)
-            item['image_urls'] = [item['pic_url']]
+            item['image_urls'] = get_image_urls(div, item['type'])
             for a in div.css('a'):
                 style = a.css("::attr(style)")
                 url = a.css("::text")
@@ -123,36 +156,10 @@ class CltestSpider(scrapy.Spider):
                     meta = {'item': item}
                     #self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
                     yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
-        if not item.get('download_url'):
+        if not item.get('download_url') and item['type'] in [TYPE_WUMA, TYPE_WUMA_ZT, TYPE_YOUMA, TYPE_YOUMA_ZT]:
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
-
-    def parse_detail7(self, response):
-        # save_file(response.url.replace('/', '-'), response.body)
-        item = response.meta['item']
-        #print 'title={0}, url={1}'.format(item['title'], response.url)
-        div = response.css('div.tpc_content.do_not_catch')
-        if div:
-            item['detail_url'] = response.url
-            item['pic_url'] = get_pic_url(div)
-            item['image_urls'] = [item['pic_url']]
-            for a in div.css('a'):
-                for url in a.css("::text").extract():
-                    if 'http://www.rm' in url:
-                        #for st in a.css('[style*="rgb"]'):
-                        #    print st.extract()
-                        for st in a.css("::attr(style)"):
-                            print st.extract()
-                        #    print st.css(':color').extract()
-                            #print st.css('::data').extract()
-                            #print st.css("{ color: rgb(0, 128, 0)}")
-                        offer = url.find('http://www.')
-                        url = url[offer:]
-                        item['download_url'] = url
-                        meta = {'item': item}
-                        #self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
-                        yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
-        if not item.get('download_url'):
-            self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
+        else:
+            yield item
 
 
     def parse_download(self, response):
@@ -164,8 +171,7 @@ class CltestSpider(scrapy.Spider):
             action = response.css('form::attr(action)').extract()[0]
             for input in response.css('input'):
                 query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
-            item['torrent_url'] = urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)
-            item['file_urls'] = [item['torrent_url']]
+            item['file_urls'] = [urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)]
         except Exception as e:
             self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
 

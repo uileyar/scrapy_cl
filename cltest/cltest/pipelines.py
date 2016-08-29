@@ -70,9 +70,11 @@ class CltestPipeline(object):
         des_dir = os.path.join(self.root_path, item.get('type'))
         ensure_dir(des_dir)
 
+        n = 0
         for img in item.get('images'):
             src_file = os.path.join(self.img_path, img.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(90, len(item.get('title')))].replace('/', '-')) + '.jpg'
+            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + str(n) + '.jpg'
+            n += 1
             try:
                 shutil.copy(src_file, des_file)
                 img_flag = True
@@ -81,7 +83,7 @@ class CltestPipeline(object):
 
         for file in item.get('files'):
             src_file = os.path.join(self.file_path, file.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(90, len(item.get('title')))].replace('/', '-')) + '.torrent'
+            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + '.torrent'
             try:
                 shutil.copy(src_file, des_file)
                 file_flag = True
@@ -93,10 +95,13 @@ class CltestPipeline(object):
         if img_flag and file_flag:
             #self.db[collection_name].insert(dict(item))
             pass
+
         elif not img_flag:
-            logging.error('no img detail_url={0}, pic_url={1}'.format(item.get('detail_url'), item.get('pic_url')))
+            #logging.error('no img detail_url={0}, image_urls={1}'.format(item.get('detail_url'), item.get('image_urls')))
+            pass
         elif not file_flag:
-            logging.error('no torrent detail_url={0}, torrent_url={1}'.format(item.get('detail_url'), item.get('torrent_url')))
+            #logging.error('no torrent detail_url={0}, file_urls={1}'.format(item.get('detail_url'), item.get('file_urls')))
+            pass
         return item
 
 
