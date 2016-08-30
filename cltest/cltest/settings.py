@@ -99,9 +99,9 @@ MONGO_PORT = 21008
 MONGO_DB = 'cl'
 
 
-CL_STORE = '/data/scrapy'
-FILES_STORE = '/data/scrapy/tmp/file'
-IMAGES_STORE = '/data/scrapy/tmp/img'
+CL_STORE = '/data/scrapy/.cl'
+FILES_STORE = '/data/scrapy/.tmp/file'
+IMAGES_STORE = '/data/scrapy/.tmp/img'
 
 LOG_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s:%(funcName)s#%(lineno)d: %(message)s'
 LOG_LEVEL = 'INFO'

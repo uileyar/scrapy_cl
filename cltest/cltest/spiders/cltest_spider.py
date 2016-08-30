@@ -94,14 +94,14 @@ class CltestSpider(scrapy.Spider):
     name = "cl"
     allowed_domains = ["cl.wrvhb.com"]
     start_urls = [
-        #'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
-        #'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
+        'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
 
-        #'http://cl.wrvhb.com/thread0806.php?fid=2',  #yazhouwuma
-        #'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
+        'http://cl.wrvhb.com/thread0806.php?fid=2',  #yazhouwuma
+        'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
 
         'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
-        #'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
+        'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
     ]
 
     def parse(self, response):
@@ -177,4 +177,4 @@ class CltestSpider(scrapy.Spider):
 
         #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         #self.logger.info('item={0}'.format(item))
-        return item
+        yield item
