@@ -26,7 +26,7 @@ ad_img_list =[
 ]
 
 
-def get_image_urls_1(div):
+def get_image_urls_one(div, max_num=1):
     img_list = []
     for src in div.css('img::attr(src)').extract():
         if '.jpg' not in src:
@@ -36,11 +36,12 @@ def get_image_urls_1(div):
         if 'http://oi' in src:
             continue
         img_list.append(str(src))
-        break
+        if len(img_list) >= max_num:
+            break
     return img_list
 
 
-def get_image_urls_2(div):
+def get_image_urls_more(div):
     img_list = []
     for src in div.css('input::attr(src)').extract():
         if '.jpg' not in src:
@@ -55,10 +56,12 @@ def get_image_urls_2(div):
 
 
 def get_image_urls(div, type):
-    if type in [TYPE_YOUMA, TYPE_YOUMA_ZT, TYPE_WUMA, TYPE_WUMA_ZT]:
-        return get_image_urls_1(div)
+    if type in [TYPE_YOUMA, TYPE_YOUMA_ZT]:
+        return get_image_urls_one(div)
+    elif type in [TYPE_WUMA, TYPE_WUMA_ZT]:
+        return get_image_urls_one(div, 3)
     elif type in [TYPE_XINSHIDAI, TYPE_GAIDAER]:
-        return get_image_urls_2(div)
+        return get_image_urls_more(div)
     else:
         return []
 
@@ -94,14 +97,14 @@ class CltestSpider(scrapy.Spider):
     name = "cl"
     allowed_domains = ["cl.wrvhb.com"]
     start_urls = [
-        'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
-        'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        #'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
+        #'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
 
         'http://cl.wrvhb.com/thread0806.php?fid=2',  #yazhouwuma
-        'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
+        #'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
 
-        'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
-        'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
+        #'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
+        #'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
     ]
 
     def parse(self, response):
