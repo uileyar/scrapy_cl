@@ -61,23 +61,21 @@ class CltestPipeline(object):
         self.connection.close()
 
     def process_item(self, item, spider):
-        img_flag = file_flag = False
+        img_num = file_num = 0
         collection_name = item.__class__.__name__.lower()
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
-        if it:
+        if it and len(item.get('images', [])) == len(it.get('images', [])) and len(item.get('files', [])) == len(it.get('files', [])):
             raise DropItem()
         #logging.info('item={0}'.format(item))
         des_dir = os.path.join(self.root_path, item.get('type'))
         ensure_dir(des_dir)
 
-        n = 0
         for img in item.get('images'):
             src_file = os.path.join(self.img_path, img.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + str(n) + '.jpg'
-            n += 1
+            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + str(img_num) + '.jpg'
             try:
                 shutil.copy(src_file, des_file)
-                img_flag = True
+                img_num += 1
             except Exception as e:
                 logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 
@@ -86,22 +84,16 @@ class CltestPipeline(object):
             des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + '.torrent'
             try:
                 shutil.copy(src_file, des_file)
-                file_flag = True
+                file_num += 1
             except Exception as e:
                 logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 
         #get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         #get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
-        if img_flag and file_flag:
-            #self.db[collection_name].insert(dict(item))
+        if file_num == len(item.get('image_urls', [])) and file_num == len(item.get('file_urls', [])):
+            self.db[collection_name].insert(dict(item))
             pass
 
-        elif not img_flag:
-            #logging.error('no img detail_url={0}, image_urls={1}'.format(item.get('detail_url'), item.get('image_urls')))
-            pass
-        elif not file_flag:
-            #logging.error('no torrent detail_url={0}, file_urls={1}'.format(item.get('detail_url'), item.get('file_urls')))
-            pass
         return item
 
 
