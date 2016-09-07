@@ -7,6 +7,7 @@
 
 import pymongo
 import scrapy
+import time
 from spiders.util import *
 from scrapy.pipelines.images import ImagesPipeline, FilesPipeline
 from scrapy.exceptions import DropItem
@@ -67,7 +68,8 @@ class CltestPipeline(object):
         if it and len(item.get('images', [])) == len(it.get('images', [])) and len(item.get('files', [])) == len(it.get('files', [])):
             raise DropItem()
         #logging.info('item={0}'.format(item))
-        des_dir = os.path.join(self.root_path, item.get('type'))
+        item['create_time'] = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+        des_dir = os.path.join(self.root_path, item['create_time'], item.get('type'))
         ensure_dir(des_dir)
 
         for img in item.get('images'):

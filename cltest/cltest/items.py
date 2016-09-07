@@ -11,7 +11,7 @@ import scrapy
 class CltestItem(scrapy.Item):
     # define the fields for your item here like:
     type = scrapy.Field()
-
+    create_time = scrapy.Field()
     title = scrapy.Field()
     detail_url = scrapy.Field()
     download_url = scrapy.Field()
