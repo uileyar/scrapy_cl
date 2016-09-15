@@ -104,7 +104,7 @@ class CltestSpider(scrapy.Spider):
         'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
 
         'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
-        'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
+        #'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
     ]
 
     def parse(self, response):

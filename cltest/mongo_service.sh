@@ -1,7 +1,7 @@
 #! /bin/bash
 
 log_prefix=/data/scrapy
-port=21008
+port=21024
 
 start_mongo() {
     echo "Starting mongo..."
