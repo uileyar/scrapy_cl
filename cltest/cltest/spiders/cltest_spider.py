@@ -95,16 +95,16 @@ def get_type(url):
 class CltestSpider(scrapy.Spider):
     MAX_PAGE = 2
     name = "cl"
-    allowed_domains = ["cl.wrvhb.com"]
+    allowed_domains = ["m.obxjkm.com"]
     start_urls = [
-        'http://cl.wrvhb.com/thread0806.php?fid=15',  #yazhouyouma
-        #'http://cl.wrvhb.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        'http://m.obxjkm.com/thread0806.php?fid=15',  #yazhouyouma
+        'http://m.obxjkm.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
 
-        #'http://cl.wrvhb.com/thread0806.php?fid=2',  #yazhouwuma
-        #'http://cl.wrvhb.com/thread0806.php?fid=17',  #yazhouwumazhuantie
+        'http://m.obxjkm.com/thread0806.php?fid=2',  #yazhouwuma
+        'http://m.obxjkm.com/thread0806.php?fid=17',  #yazhouwumazhuantie
 
-        #'http://cl.wrvhb.com/thread0806.php?fid=8',  #xinshidai
-        #'http://cl.wrvhb.com/thread0806.php?fid=16',  #gaidaer
+        #'http://m.obxjkm.com/thread0806.php?fid=8',  #xinshidai
+        #'http://m.obxjkm.com/thread0806.php?fid=16',  #gaidaer
     ]
 
     def parse(self, response):
