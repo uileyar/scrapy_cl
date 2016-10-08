@@ -71,13 +71,16 @@ class CltestPipeline(object):
         item['create_time'] = time.strftime('%Y-%m-%d', time.localtime(time.time()))
         des_dir = os.path.join(self.root_path, item['create_time'], item.get('type'))
         ensure_dir(des_dir)
-
+        img_num = len(item.get('images'))
         for img in item.get('images'):
+            cur_num = 0
             src_file = os.path.join(self.img_path, img.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + str(img_num) + '.jpg'
+            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-'))
+            if img_num > 1:
+                des_file += str(cur_num)
             try:
-                shutil.copy(src_file, des_file)
-                img_num += 1
+                shutil.copy(src_file, des_file + '.jpg')
+                cur_num += 1
             except Exception as e:
                 logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 

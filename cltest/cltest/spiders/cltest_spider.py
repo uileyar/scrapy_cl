@@ -98,7 +98,7 @@ class CltestSpider(scrapy.Spider):
     allowed_domains = ["m.obxjkm.com"]
     start_urls = [
         'http://m.obxjkm.com/thread0806.php?fid=15',  #yazhouyouma
-        #'http://m.obxjkm.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        'http://m.obxjkm.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
 
         #'http://m.obxjkm.com/thread0806.php?fid=2',  #yazhouwuma
         #'http://m.obxjkm.com/thread0806.php?fid=17',  #yazhouwumazhuantie
