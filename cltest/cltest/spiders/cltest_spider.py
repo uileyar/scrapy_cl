@@ -12,6 +12,10 @@ from util import *
 
 # scrapy crawl cl -L INFO
 
+
+CLTEST_HOST = 'cc.uhen.org'
+CL_MAX_PAGE = 3
+
 TYPE_YOUMA = 'youma'
 TYPE_YOUMA_ZT = 'youmazhuantie'
 TYPE_WUMA = 'wuma'
@@ -23,45 +27,32 @@ TYPE_DEFAULT = 'hehe'
 
 ad_img_list =[
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
+    'http://kk.51688.cc/ya/xv92.jpg',
+    'http://kk.51688.cc/ya/283076.jpg',
 ]
 
 
-def get_image_urls_one(div, max_num=1):
+def _get_image_urls(div, max_num=1):
     img_list = []
     for src in div.css('img::attr(src)').extract():
-        if '.jpg' not in src:
-            continue
         if src in ad_img_list:
             continue
-        if 'http://oi' in src:
+        if ('http://oi' in src) or ('http://kk.51688.cc' in src):
             continue
-        img_list.append(str(src))
+        if ('.jpg' in src) or ('.jpeg' in src):
+            img_list.append(str(src))
         if len(img_list) >= max_num:
             break
     return img_list
 
 
-def get_image_urls_more(div):
-    img_list = []
-    for src in div.css('input::attr(src)').extract():
-        if '.jpg' not in src:
-            continue
-        if src in ad_img_list:
-            continue
-        if 'http://oi' in src:
-            continue
-        img_list.append(str(src))
-    #print img_list
-    return img_list
-
-
 def get_image_urls(div, type):
     if type in [TYPE_YOUMA, TYPE_YOUMA_ZT]:
-        return get_image_urls_one(div)
+        return _get_image_urls(div)
     elif type in [TYPE_WUMA, TYPE_WUMA_ZT]:
-        return get_image_urls_one(div, 3)
+        return _get_image_urls(div, 3)
     elif type in [TYPE_XINSHIDAI, TYPE_GAIDAER]:
-        return get_image_urls_more(div)
+        return _get_image_urls(div, 999)
     else:
         return []
 
@@ -93,22 +84,22 @@ def get_type(url):
 
 
 class CltestSpider(scrapy.Spider):
-    MAX_PAGE = 2
+    max_page = CL_MAX_PAGE
     name = "cl"
-    allowed_domains = ["m.obxjkm.com"]
+    allowed_domains = [CLTEST_HOST]
     start_urls = [
-        'http://m.obxjkm.com/thread0806.php?fid=15',  #yazhouyouma
-        'http://m.obxjkm.com/thread0806.php?fid=18',  #yazhouyoumazhuantie
+        'http://{}/thread0806.php?fid=15'.format(CLTEST_HOST),  # yazhouyouma
+        'http://{}/thread0806.php?fid=18'.format(CLTEST_HOST),  # yazhouyoumazhuantie
 
-        #'http://m.obxjkm.com/thread0806.php?fid=2',  #yazhouwuma
-        #'http://m.obxjkm.com/thread0806.php?fid=17',  #yazhouwumazhuantie
+        # 'http://{}/thread0806.php?fid=2'.format(CLTEST_HOST),  # yazhouwuma
+        # 'http://{}/thread0806.php?fid=17'.format(CLTEST_HOST),  # yazhouwumazhuantie
 
-        #'http://m.obxjkm.com/thread0806.php?fid=8',  #xinshidai
-        #'http://m.obxjkm.com/thread0806.php?fid=16',  #gaidaer
+        # 'http://{}/thread0806.php?fid=8'.format(CLTEST_HOST),  # xinshidai
+        # 'http://{}/thread0806.php?fid=16'.format(CLTEST_HOST),  # gaidaer
     ]
 
     def parse(self, response):
-        #save_file(response.url.split("/")[-2] + '.html', response.body)
+        # save_file(response.url.split("/")[-2] + '.html', response.body)
         self.logger.info('start url={0}'.format(response.url))
 
         for sel in response.css('tbody:last-of-type tr.tr3.t_one'):
@@ -132,7 +123,7 @@ class CltestSpider(scrapy.Spider):
                 continue
             url = response.urljoin(href.extract()[0])
             page = get_page(url)
-            if page and page <= self.MAX_PAGE:
+            if page and page <= self.max_page:
                 self.logger.info('start next url={0}'.format(url))
                 yield scrapy.Request(url, callback=self.parse)
                 break
@@ -157,7 +148,7 @@ class CltestSpider(scrapy.Spider):
                     url = url[offer:]
                     item['download_url'] = url
                     meta = {'item': item}
-                    #self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
+                    # self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
                     yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and item['type'] in [TYPE_WUMA, TYPE_WUMA_ZT, TYPE_YOUMA, TYPE_YOUMA_ZT]:
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
@@ -166,8 +157,8 @@ class CltestSpider(scrapy.Spider):
 
 
     def parse_download(self, response):
-        #save_file(response.url.replace('/', '-'), response.body)
-        #print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
+        # save_file(response.url.replace('/', '-'), response.body)
+        # print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
         item = response.meta['item']
         query = {}
         try:
@@ -178,6 +169,6 @@ class CltestSpider(scrapy.Spider):
         except Exception as e:
             self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
 
-        #print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
-        #self.logger.info('item={0}'.format(item))
+        # print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
+        # self.logger.info('item={0}'.format(item))
         yield item
