@@ -79,7 +79,7 @@ class CltestPipeline(object):
 
         for item_img in item_images:
             src_file = os.path.join(self.img_path, item_img.get('path'))
-            des_file = os.path.join(des_dir, get_file_name('title'))
+            des_file = os.path.join(des_dir, get_file_name(item.get('title')))
             if img_num > 1:
                 des_file += str(img_num)
             try:
@@ -90,7 +90,7 @@ class CltestPipeline(object):
 
         for item_file in item_files:
             src_file = os.path.join(self.file_path, item_file.get('path'))
-            des_file = os.path.join(des_dir, get_file_name('title'))
+            des_file = os.path.join(des_dir, get_file_name(item.get('title')))
             try:
                 shutil.copy(src_file, '{}.torrent'.format(des_file))
                 file_num += 1
