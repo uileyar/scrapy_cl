@@ -68,6 +68,7 @@ class CltestPipeline(object):
         img_num = file_num = 0
         item_images = item.get('images', [])
         item_files = item.get('files', [])
+        item_title = item.get('title')
         collection_name = item.__class__.__name__.lower()
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
         if it and len(item_images) == len(it.get('images', [])) and len(item_files) == len(it.get('files', [])):
@@ -79,23 +80,23 @@ class CltestPipeline(object):
 
         for item_img in item_images:
             src_file = os.path.join(self.img_path, item_img.get('path'))
-            des_file = os.path.join(des_dir, get_file_name(item.get('title')))
+            des_file = os.path.join(des_dir, get_file_name(item_title))
             if img_num > 1:
                 des_file += str(img_num)
             try:
-                shutil.copy(src_file, '{}.jpg'.format(des_file))
+                shutil.copy(src_file, u'{}.jpg'.format(des_file))
                 img_num += 1
             except Exception as e:
-                logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
+                logging.error('error={0}; title_len={1}'.format(e, len(item_title)))
 
         for item_file in item_files:
             src_file = os.path.join(self.file_path, item_file.get('path'))
-            des_file = os.path.join(des_dir, get_file_name(item.get('title')))
+            des_file = os.path.join(des_dir, get_file_name(item_title))
             try:
-                shutil.copy(src_file, '{}.torrent'.format(des_file))
+                shutil.copy(src_file, u'{}.torrent'.format(des_file))
                 file_num += 1
             except Exception as e:
-                logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
+                logging.error('error={0}; title_len={1}'.format(e, len(item_title)))
 
         # get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         # get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
