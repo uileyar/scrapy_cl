@@ -68,8 +68,8 @@ DEFAULT_REQUEST_HEADERS = {
 ITEM_PIPELINES = {
     'scrapy.pipelines.images.ImagesPipeline': 1,
     'scrapy.pipelines.files.FilesPipeline': 2,
-    #'cltest.pipelines.ClImagePipeline': 5,
-    #'cltest.pipelines.ClFilePipeline': 6,
+    # 'cltest.pipelines.ClImagePipeline': 5,
+    # 'cltest.pipelines.ClFilePipeline': 6,
     'cltest.pipelines.CltestPipeline': 300,
 }
 

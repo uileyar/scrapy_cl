@@ -1,0 +1,4 @@
+image
+pymongo
+pypiwin32
+httplib2

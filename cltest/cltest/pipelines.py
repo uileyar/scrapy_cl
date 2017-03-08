@@ -31,6 +31,10 @@ def get_file(url, file_path):
     return False
 
 
+def get_file_name(title):
+    return title[0:min(80, len(title))].replace('/', '-')
+
+
 class CltestPipeline(object):
     def __init__(self, mongo_server, mongo_port, mongo_db, file_path, img_path, root_path):
         self.mongo_server = mongo_server
@@ -39,7 +43,6 @@ class CltestPipeline(object):
         self.file_path = file_path
         self.img_path = img_path
         self.root_path = root_path
-
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -63,42 +66,42 @@ class CltestPipeline(object):
 
     def process_item(self, item, spider):
         img_num = file_num = 0
+        item_images = item.get('images', [])
+        item_files = item.get('files', [])
         collection_name = item.__class__.__name__.lower()
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
-        if it and len(item.get('images', [])) == len(it.get('images', [])) and len(item.get('files', [])) == len(it.get('files', [])):
+        if it and len(item_images) == len(it.get('images', [])) and len(item_files) == len(it.get('files', [])):
             raise DropItem()
-        #logging.info('item={0}'.format(item))
+        # logging.info('item={0}'.format(item))
         item['create_time'] = time.strftime('%Y-%m-%d', time.localtime(time.time()))
         des_dir = os.path.join(self.root_path, item['create_time'], item.get('type'))
         ensure_dir(des_dir)
-        img_num = len(item.get('images'))
-        for img in item.get('images'):
-            cur_num = 0
-            src_file = os.path.join(self.img_path, img.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-'))
+
+        for item_img in item_images:
+            src_file = os.path.join(self.img_path, item_img.get('path'))
+            des_file = os.path.join(des_dir, get_file_name('title'))
             if img_num > 1:
-                des_file += str(cur_num)
+                des_file += str(img_num)
             try:
-                shutil.copy(src_file, des_file + '.jpg')
-                cur_num += 1
+                shutil.copy(src_file, '{}.jpg'.format(des_file))
+                img_num += 1
             except Exception as e:
                 logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 
-        for file in item.get('files'):
-            src_file = os.path.join(self.file_path, file.get('path'))
-            des_file = os.path.join(des_dir, item.get('title')[0:min(80, len(item.get('title')))].replace('/', '-')) + '.torrent'
+        for item_file in item_files:
+            src_file = os.path.join(self.file_path, item_file.get('path'))
+            des_file = os.path.join(des_dir, get_file_name('title'))
             try:
-                shutil.copy(src_file, des_file)
+                shutil.copy(src_file, '{}.torrent'.format(des_file))
                 file_num += 1
             except Exception as e:
                 logging.error('error={0}; title_len={1}'.format(e, len(item.get('title'))))
 
-        #get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
-        #get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
-        if file_num == len(item.get('image_urls', [])) and file_num == len(item.get('file_urls', [])):
-            self.db[collection_name].insert(dict(item))
+        # get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
+        # get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
+        if img_num == len(item.get('image_urls', [])) and file_num == len(item.get('file_urls', [])):
             pass
-
+            # self.db[collection_name].insert(dict(item))
         return item
 
 
@@ -142,7 +145,7 @@ class ClFilePipeline(FilesPipeline):
     def item_completed(self, results, item, info):
         file_paths = [x['path'] for ok, x in results if ok]
         if not file_paths:
-            #logging.warning('no file results={0}, item={1}, info={2}'.format(results, item, info))
+            # logging.warning('no file results={0}, item={1}, info={2}'.format(results, item, info))
             raise DropItem("Item contains no torrent file")
 
         for file in file_paths:
