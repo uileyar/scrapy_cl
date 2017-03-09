@@ -1,0 +1,17 @@
+github:
+https://github.com/uileyar/scrapy_cl.git
+
+
+http://cl.wrvhb.com/thread0806.php?fid=2,#亞洲無碼原創區 
+http://cl.wrvhb.com/thread0806.php?fid=17,#亞洲無碼轉帖交流區 
+http://cl.wrvhb.com/thread0806.php?fid=15,#亞洲有碼原創區  
+http://cl.wrvhb.com/thread0806.php?fid=18,#亞洲有碼轉帖交流區 
+http://cl.wrvhb.com/thread0806.php?fid=8,#新時代的我們 
+http://cl.wrvhb.com/thread0806.php?fid=16,#達蓋爾的旗幟 
+
+
+# scrapyd-deploy cl
+# curl http://localhost:6800/schedule.json -d project=cltest -d spider=cl
+# kill -INT $(cat /data/scrapy/scrapyd.pid)
+# scrapyd --pidfile /data/scrapy/scrapyd.pid -l /var/log/scrapyd/scrapyd.log &
+
