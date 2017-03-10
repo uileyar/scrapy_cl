@@ -16,19 +16,20 @@ from util import *
 CLTEST_HOST = 'cc.uhen.org'
 CL_MAX_PAGE = 3
 
-TYPE_YOUMA = 'youma'
-TYPE_YOUMA_ZT = 'youmazhuantie'
-TYPE_WUMA = 'wuma'
-TYPE_WUMA_ZT = 'wumazhuantie'
-TYPE_XINSHIDAI = 'xinshidai'
-TYPE_GAIDAER = 'gaidaer'
-TYPE_DEFAULT = 'hehe'
+TYPE_YOUMA = 'ym'
+TYPE_YOUMA_ZT = 'ymzt'
+TYPE_WUMA = 'wm'
+TYPE_WUMA_ZT = 'wmzt'
+TYPE_XINSHIDAI = 'xsd'
+TYPE_GAIDAER = 'gder'
+TYPE_DEFAULT = 'hh'
 
 
 ad_img_list =[
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
     'http://kk.51688.cc/ya/xv92.jpg',
     'http://kk.51688.cc/ya/283076.jpg',
+    'http://dio66.net/images/olo_1000x80.jpg'
 ]
 
 
@@ -155,7 +156,6 @@ class CltestSpider(scrapy.Spider):
         else:
             yield item
 
-
     def parse_download(self, response):
         # save_file(response.url.replace('/', '-'), response.body)
         # print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
@@ -168,7 +168,6 @@ class CltestSpider(scrapy.Spider):
             item['file_urls'] = [urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)]
         except Exception as e:
             self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
-
         # print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
         # self.logger.info('item={0}'.format(item))
         yield item

@@ -67,9 +67,9 @@ DEFAULT_REQUEST_HEADERS = {
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'scrapy.pipelines.images.ImagesPipeline': 1,
-    'scrapy.pipelines.files.FilesPipeline': 2,
+    # 'scrapy.pipelines.files.FilesPipeline': 2,
     # 'cltest.pipelines.ClImagePipeline': 5,
-    # 'cltest.pipelines.ClFilePipeline': 6,
+    'cltest.pipelines.ClFilePipeline': 6,
     'cltest.pipelines.CltestPipeline': 300,
 }
 
@@ -103,6 +103,8 @@ CL_STORE = '/data/scrapy/.cl'
 FILES_STORE = '/data/scrapy/.tmp/file'
 IMAGES_STORE = '/data/scrapy/.tmp/img'
 
+FILES_URLS_FIELD = 'file_urls'
+FILES_RESULT_FIELD = 'files'
 LOG_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s:%(funcName)s#%(lineno)d: %(message)s'
 #LOG_LEVEL = 'INFO'
 LOG_LEVEL = 'ERROR'
