@@ -13,7 +13,7 @@ from util import *
 # scrapy crawl cl -L INFO
 
 
-CLTEST_HOST = 'cc.uhen.org'
+CLTEST_HOST = 'cl.fu4.lol'
 CL_MAX_PAGE = 3
 
 TYPE_YOUMA = 'ym'
