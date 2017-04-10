@@ -41,8 +41,7 @@ def get_file(url, file_path):
     return False
 
 
-def get_file_name(str_name, suffix_num):
-    max_len = MAX_FILE_LEN
+def get_file_name(str_name, suffix_num, max_len=MAX_FILE_LEN):
     if isinstance(str_name, unicode):
         logging.info('{} is unicode'.format(str_name))
     if isinstance(str_name, str):
@@ -101,21 +100,27 @@ class CltestPipeline(object):
 
         for item_img in item_images:
             src_file = os.path.join(self.img_path, item_img.get('path'))
-            des_file = os.path.join(des_dir, get_file_name(item_title, img_num))
-            try:
-                shutil.copy(src_file, u'{}.jpg'.format(des_file))
-                img_num += 1
-            except Exception as e:
-                logging.error('img error={}; title = "{}" len = {}'.format(repr(e), item_title, len(item_title)))
+            max_len = MAX_FILE_LEN
+            while True:
+                try:
+                    shutil.copy(src_file, u'{}.jpg'.format(os.path.join(des_dir, get_file_name(item_title, img_num, max_len=max_len))))
+                    img_num += 1
+                    break
+                except Exception as e:
+                    logging.error('img error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
+                    max_len -= 2
 
         for item_file in item_files:
             src_file = os.path.join(self.file_path, item_file.get('path'))
-            des_file = os.path.join(des_dir, get_file_name(item_title, file_num))
-            try:
-                shutil.copy(src_file, u'{}.torrent'.format(des_file))
-                file_num += 1
-            except Exception as e:
-                logging.error('file error={}; title = "{}" len = {}'.format(repr(e), item_title, len(item_title)))
+            max_len = MAX_FILE_LEN
+            while True:
+                try:
+                    shutil.copy(src_file, u'{}.torrent'.format(os.path.join(des_dir, get_file_name(item_title, file_num, max_len=max_len))))
+                    file_num += 1
+                    break
+                except Exception as e:
+                    logging.error('file error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
+                    max_len -= 2
 
         # get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         # get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))

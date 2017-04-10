@@ -12,20 +12,22 @@ from util import *
 
 # scrapy crawl cl -L INFO
 
-
 CLTEST_HOST = 'cl.fu4.lol'
 CL_MAX_PAGE = 3
 
-TYPE_YOUMA = 'ym'
-TYPE_YOUMA_ZT = 'ymzt'
-TYPE_WUMA = 'wm'
-TYPE_WUMA_ZT = 'wmzt'
-TYPE_XINSHIDAI = 'xsd'
-TYPE_GAIDAER = 'gder'
 TYPE_DEFAULT = 'hh'
 
+FOLDER_MAP = {
+    'wm': {'fid': '2', 'num': 1, },
+    'xsd': {'fid': '8', 'num': 999, 'd_url': False},
+    'ym': {'fid': '15', 'num': 1},
+    'gder': {'fid': '16', 'num': 999, 'd_url': False},
+    'gcyc': {'fid': '25', 'num': 6},
+    'zzyc': {'fid': '26', 'num': 1},
+    TYPE_DEFAULT: {'fid': 'default', 'num': 1},
+}
 
-ad_img_list =[
+ad_img_list = [
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
     'http://kk.51688.cc/ya/xv92.jpg',
     'http://kk.51688.cc/ya/283076.jpg',
@@ -33,7 +35,8 @@ ad_img_list =[
 ]
 
 
-def _get_image_urls(div, max_num=1):
+def get_image_urls(div, f_type):
+    num = FOLDER_MAP.get(f_type).get('num')
     img_list = []
     for src in div.css('img::attr(src)').extract():
         if src in ad_img_list:
@@ -42,20 +45,9 @@ def _get_image_urls(div, max_num=1):
             continue
         if ('.jpg' in src) or ('.jpeg' in src):
             img_list.append(str(src))
-        if len(img_list) >= max_num:
+        if len(img_list) >= num:
             break
     return img_list
-
-
-def get_image_urls(div, type):
-    if type in [TYPE_YOUMA, TYPE_YOUMA_ZT]:
-        return _get_image_urls(div)
-    elif type in [TYPE_WUMA, TYPE_WUMA_ZT]:
-        return _get_image_urls(div, 3)
-    elif type in [TYPE_XINSHIDAI, TYPE_GAIDAER]:
-        return _get_image_urls(div, 999)
-    else:
-        return []
 
 
 def get_page(url):
@@ -68,19 +60,10 @@ def get_page(url):
 
 def get_type(url):
     query = urlparse.urlparse(url).query
-    fid = urlparse.parse_qs(query, True).get('fid')
-    if fid[0] == '15':
-        return TYPE_YOUMA
-    elif fid[0] == '18':
-        return TYPE_YOUMA_ZT
-    elif fid[0] == '2':
-        return TYPE_WUMA
-    elif fid[0] == '17':
-        return TYPE_WUMA_ZT
-    elif fid[0] == '8':
-        return TYPE_XINSHIDAI
-    elif fid[0] == '16':
-        return TYPE_GAIDAER
+    fid = urlparse.parse_qs(query, True).get('fid')[0]
+    for f_type, v in FOLDER_MAP.items():
+        if v.get('fid') == fid:
+            return f_type
     return TYPE_DEFAULT
 
 
@@ -89,14 +72,12 @@ class CltestSpider(scrapy.Spider):
     name = "cl"
     allowed_domains = [CLTEST_HOST]
     start_urls = [
-        'http://{}/thread0806.php?fid=15'.format(CLTEST_HOST),  # yazhouyouma
-        'http://{}/thread0806.php?fid=18'.format(CLTEST_HOST),  # yazhouyoumazhuantie
-
         # 'http://{}/thread0806.php?fid=2'.format(CLTEST_HOST),  # yazhouwuma
-        # 'http://{}/thread0806.php?fid=17'.format(CLTEST_HOST),  # yazhouwumazhuantie
-
         # 'http://{}/thread0806.php?fid=8'.format(CLTEST_HOST),  # xinshidai
+        'http://{}/thread0806.php?fid=15'.format(CLTEST_HOST),  # yazhouyouma
         # 'http://{}/thread0806.php?fid=16'.format(CLTEST_HOST),  # gaidaer
+        # 'http://{}/thread0806.php?fid=25'.format(CLTEST_HOST),  # guochanyuanchuang
+        'http://{}/thread0806.php?fid=26'.format(CLTEST_HOST),  # zhongziyuanchuang
     ]
 
     def parse(self, response):
@@ -151,7 +132,7 @@ class CltestSpider(scrapy.Spider):
                     meta = {'item': item}
                     # self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
                     yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
-        if not item.get('download_url') and item['type'] in [TYPE_WUMA, TYPE_WUMA_ZT, TYPE_YOUMA, TYPE_YOUMA_ZT]:
+        if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
         else:
             yield item
