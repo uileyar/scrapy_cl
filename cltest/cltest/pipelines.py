@@ -43,9 +43,11 @@ def get_file(url, file_path):
 
 def get_file_name(str_name, suffix_num, max_len=MAX_FILE_LEN):
     if isinstance(str_name, unicode):
-        logging.info('{} is unicode'.format(str_name))
+        pass
+        # logging.info('{} is unicode'.format(str_name))
     if isinstance(str_name, str):
-        logging.info('{} is str'.format(str_name))
+        pass
+        # logging.info('{} is str'.format(str_name))
     if suffix_num > 0:
         max_len -= 1
     new_name = str_name[0:min(max_len, len(str_name))].replace('/', '-')

@@ -47,6 +47,14 @@ def get_image_urls(div, f_type):
             img_list.append(str(src))
         if len(img_list) >= num:
             break
+    if not img_list:
+        for src in div.css('input::attr(src)').extract():
+            if src in ad_img_list:
+                continue
+            if ('.jpg' in src) or ('.jpeg' in src):
+                img_list.append(str(src))
+            if len(img_list) >= num:
+                break
     return img_list
 
 
@@ -93,7 +101,7 @@ class CltestSpider(scrapy.Spider):
             item['type'] = get_type(response.url)
             url = data.css("::attr(href)").extract()[0]
             url = response.urljoin(url)
-            self.logger.debug('detail_url={0}'.format(url))
+            # self.logger.debug('detail_url={0}'.format(url))
             meta = {'item': item}
             yield scrapy.Request(url, callback=self.parse_detail, meta=meta)
 
@@ -125,7 +133,7 @@ class CltestSpider(scrapy.Spider):
                 url = url.extract()[0]
                 style = style.extract()[0]
                 if ('http://www.' in url) and ('color:#008000;' in style):
-                    self.logger.debug('url={0}, style={1}'.format(url, style))
+                    # self.logger.debug('url={0}, style={1}'.format(url, style))
                     offer = url.find('http://www.')
                     url = url[offer:]
                     item['download_url'] = url
