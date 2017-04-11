@@ -16,15 +16,14 @@ CLTEST_HOST = 'cl.fu4.lol'
 CL_MAX_PAGE = 3
 
 TYPE_DEFAULT = 'hh'
-
 FOLDER_MAP = {
-    'wm': {'fid': '2', 'num': 1, },
-    'xsd': {'fid': '8', 'num': 999, 'd_url': False},
-    'ym': {'fid': '15', 'num': 1},
-    'gder': {'fid': '16', 'num': 999, 'd_url': False},
-    'gcyc': {'fid': '25', 'num': 6},
-    'zzyc': {'fid': '26', 'num': 1},
-    TYPE_DEFAULT: {'fid': 'default', 'num': 1},
+    # 'wm': {'fid': '2', 'num': 1, 'intro': 'yazhouwuma'},
+    'xsd': {'fid': '8', 'num': 999, 'd_url': False, 'intro': 'xinshidai'},
+    'ym': {'fid': '15', 'num': 1, 'intro': 'yazhouyouma'},
+    # 'gder': {'fid': '16', 'num': 999, 'd_url': False, 'intro': 'gaidaer'},
+    # 'gcyc': {'fid': '25', 'num': 6, 'intro': 'guochanyuanchuang'},
+    'zzyc': {'fid': '26', 'num': 1, 'intro': 'zhongziyuanchuang'},
+    TYPE_DEFAULT: {'fid': 'default', 'num': 1, 'intro': 'default'},
 }
 
 ad_img_list = [
@@ -79,14 +78,11 @@ class CltestSpider(scrapy.Spider):
     max_page = CL_MAX_PAGE
     name = "cl"
     allowed_domains = [CLTEST_HOST]
-    start_urls = [
-        # 'http://{}/thread0806.php?fid=2'.format(CLTEST_HOST),  # yazhouwuma
-        # 'http://{}/thread0806.php?fid=8'.format(CLTEST_HOST),  # xinshidai
-        'http://{}/thread0806.php?fid=15'.format(CLTEST_HOST),  # yazhouyouma
-        # 'http://{}/thread0806.php?fid=16'.format(CLTEST_HOST),  # gaidaer
-        # 'http://{}/thread0806.php?fid=25'.format(CLTEST_HOST),  # guochanyuanchuang
-        'http://{}/thread0806.php?fid=26'.format(CLTEST_HOST),  # zhongziyuanchuang
-    ]
+
+    def start_requests(self):
+        for f_type, v in FOLDER_MAP.items():
+            url = 'http://{}/thread0806.php?fid={}'.format(CLTEST_HOST, v.get('fid'))
+            yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         # save_file(response.url.split("/")[-2] + '.html', response.body)
