@@ -17,13 +17,13 @@ CL_MAX_PAGE = 3
 
 TYPE_DEFAULT = 'hh'
 FOLDER_MAP = {
-    # 'wm': {'fid': '2', 'num': 1, 'intro': 'yazhouwuma'},
-    'xsd': {'fid': '8', 'num': 999, 'd_url': False, 'intro': 'xinshidai'},
-    'ym': {'fid': '15', 'num': 1, 'intro': 'yazhouyouma'},
-    # 'gder': {'fid': '16', 'num': 999, 'd_url': False, 'intro': 'gaidaer'},
-    # 'gcyc': {'fid': '25', 'num': 6, 'intro': 'guochanyuanchuang'},
-    'zzyc': {'fid': '26', 'num': 1, 'intro': 'zhongziyuanchuang'},
-    TYPE_DEFAULT: {'fid': 'default', 'num': 1, 'intro': 'default'},
+    # 'wm': {'fid': '2', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouwuma'},
+    'xsd': {'fid': '8', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'xinshidai'},
+    'ym': {'fid': '15', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouyouma'},
+    # 'gder': {'fid': '16', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'gaidaer'},
+    # 'gcyc': {'fid': '25', 'num': 6, 'max_page': CL_MAX_PAGE, 'intro': 'guochanyuanchuang'},
+    'zzyc': {'fid': '26', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'zhongziyuanchuang'},
+    TYPE_DEFAULT: {'fid': 'default', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'default'},
 }
 
 ad_img_list = [
@@ -75,7 +75,6 @@ def get_type(url):
 
 
 class CltestSpider(scrapy.Spider):
-    max_page = CL_MAX_PAGE
     name = "cl"
     allowed_domains = [CLTEST_HOST]
 
@@ -87,14 +86,15 @@ class CltestSpider(scrapy.Spider):
     def parse(self, response):
         # save_file(response.url.split("/")[-2] + '.html', response.body)
         self.logger.info('start url={0}'.format(response.url))
-
+        f_type = get_type(response.url)
+        max_page = FOLDER_MAP.get(f_type).get('max_page')
         for sel in response.css('tbody:last-of-type tr.tr3.t_one'):
             data = sel.css('td h3 a')
             if not data:
                 continue
             item = CltestItem()
             item['title'] = data.css("::text").extract()[0]
-            item['type'] = get_type(response.url)
+            item['type'] = f_type
             url = data.css("::attr(href)").extract()[0]
             url = response.urljoin(url)
             # self.logger.debug('detail_url={0}'.format(url))
@@ -109,7 +109,7 @@ class CltestSpider(scrapy.Spider):
                 continue
             url = response.urljoin(href.extract()[0])
             page = get_page(url)
-            if page and page <= self.max_page:
+            if page and page <= max_page:
                 self.logger.info('start next url={0}'.format(url))
                 yield scrapy.Request(url, callback=self.parse)
                 break

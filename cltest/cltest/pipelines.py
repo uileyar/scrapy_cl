@@ -109,7 +109,7 @@ class CltestPipeline(object):
                     img_num += 1
                     break
                 except Exception as e:
-                    logging.error('img error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
+                    # logging.error('img error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
                     max_len -= 2
 
         for item_file in item_files:
@@ -121,14 +121,14 @@ class CltestPipeline(object):
                     file_num += 1
                     break
                 except Exception as e:
-                    logging.error('file error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
+                    # logging.error('file error={}; title="{}", len={}, m_len={}'.format(repr(e), item_title, len(item_title), max_len))
                     max_len -= 2
 
         # get_file(item.get('pic_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.jpg'))
         # get_file(item.get('torrent_url'), os.path.join(self.root_path, item.get('title').replace('/', '-') + '.torrent'))
         if img_num == len(item.get('image_urls', [])) and file_num == len(item.get('file_urls', [])):
             pass
-            # self.db[collection_name].insert(dict(item))
+            self.db[collection_name].insert(dict(item))
         return item
 
 
