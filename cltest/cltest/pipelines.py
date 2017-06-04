@@ -93,9 +93,10 @@ class CltestPipeline(object):
         item_title = item.get('title')
         collection_name = item.__class__.__name__.lower()
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
+
         if it and len(item_images) == len(it.get('images', [])) and len(item_files) == len(it.get('files', [])):
             raise DropItem()
-        # logging.info('item={0}'.format(item))
+        #logging.info('item={}'.format(item))
         item['create_time'] = time.strftime('%y%m%d', time.localtime(time.time()))
         des_dir = os.path.join(self.root_path, item['create_time'], item.get('type'))
         ensure_dir(des_dir)
