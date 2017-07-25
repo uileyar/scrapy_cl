@@ -106,8 +106,10 @@ IMAGES_STORE = '/data/scrapy/.tmp/img'
 FILES_URLS_FIELD = 'file_urls'
 FILES_RESULT_FIELD = 'files'
 LOG_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s:%(funcName)s#%(lineno)d: %(message)s'
-#LOG_LEVEL = 'INFO'
-LOG_LEVEL = 'ERROR'
+
+LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
+#LOG_LEVEL = 'ERROR'
 
 #CONCURRENT_ITEMS = 100 #100
 #CONCURRENT_REQUESTS = 16 #16

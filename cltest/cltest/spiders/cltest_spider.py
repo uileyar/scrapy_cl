@@ -12,13 +12,13 @@ from util import *
 
 # scrapy crawl cl -L INFO
 
-CLTEST_HOST = 'cl.fu4.lol'
+CLTEST_HOST = 'cl.5dv.xyz'
 CL_MAX_PAGE = 3
 
 TYPE_DEFAULT = 'hh'
 FOLDER_MAP = {
     # 'wm': {'fid': '2', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouwuma'},
-    'xsd': {'fid': '8', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'xinshidai'},
+    #'xsd': {'fid': '8', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'xinshidai'},
     'ym': {'fid': '15', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouyouma'},
     # 'gder': {'fid': '16', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'gaidaer'},
     # 'gcyc': {'fid': '25', 'num': 6, 'max_page': CL_MAX_PAGE, 'intro': 'guochanyuanchuang'},
@@ -30,7 +30,8 @@ ad_img_list = [
     'http://imgroom.net/images/2016/03/30/700a2edb.jpg',
     'http://kk.51688.cc/ya/xv92.jpg',
     'http://kk.51688.cc/ya/283076.jpg',
-    'http://dio66.net/images/olo_1000x80.jpg'
+    'http://dio66.net/images/olo_1000x80.jpg',
+    #'http://dio889.net/images/blr-880-80-4.jpg',
 ]
 
 
@@ -40,7 +41,7 @@ def get_image_urls(div, f_type):
     for src in div.css('img::attr(src)').extract():
         if src in ad_img_list:
             continue
-        if ('http://oi' in src) or ('http://kk.51688.cc' in src):
+        if ('http://oi' in src) or ('http://kk.51688.cc' in src) or ('http://dio889.net/images' in src):
             continue
         if ('.jpg' in src) or ('.jpeg' in src):
             img_list.append(str(src))
@@ -123,18 +124,18 @@ class CltestSpider(scrapy.Spider):
             item['image_urls'] = get_image_urls(div, item['type'])
             for a in div.css('a'):
                 style = a.css("::attr(style)")
-                url = a.css("::text")
+                url = a.css("::attr(href)")
                 if not style or not url:
                     continue
                 url = url.extract()[0]
                 style = style.extract()[0]
                 if ('http://www.' in url) and ('color:#008000;' in style):
-                    # self.logger.debug('url={0}, style={1}'.format(url, style))
+                    #self.logger.debug('url={0}, style={1}'.format(url, style))
                     offer = url.find('http://www.')
                     url = url[offer:]
                     item['download_url'] = url
                     meta = {'item': item}
-                    # self.logger.debug('detail_url={0}, url={1}'.format(item['detail_url'], url))
+                    self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
                     yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
@@ -142,8 +143,9 @@ class CltestSpider(scrapy.Spider):
             yield item
 
     def parse_download(self, response):
-        # save_file(response.url.replace('/', '-'), response.body)
-        # print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
+        # save_file(os.path.join('/data', response.url.replace('/', '-')), response.body)
+        #print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
+        # print(response.body)
         item = response.meta['item']
         query = {}
         try:
@@ -153,6 +155,5 @@ class CltestSpider(scrapy.Spider):
             item['file_urls'] = [urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)]
         except Exception as e:
             self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
-        # print '{0}{1}?{2}'.format(host, action, urllib.urlencode(query))
-        # self.logger.info('item={0}'.format(item))
+        self.logger.info('file_urls={}'.format(item.get('file_urls')))
         yield item
