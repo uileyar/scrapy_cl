@@ -131,16 +131,16 @@ class CltestSpider(scrapy.Spider):
                 style = style.extract()[0]
                 url = url.extract()[0]
                 referer_url = referer_url.extract()[0]
-                if ('http://www.' in url) and ('color:#008000;' in style):
-                    #self.logger.debug('url={0}, style={1}'.format(url, style))
-                    offer = url.find('http://www.')
-                    url = url[offer:]
+                if ('http://' in url) and (('color:#008000;' in style) or ('rgb(0, 128, 0)' in style)):
+                    # self.logger.debug('url={0}, style={1}'.format(url, style))
+                    # offer = url.find('http://www.')
+                    # url = url[offer:]
                     item['download_url'] = url
                     meta = {'item': item}
                     # self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
-                    yield scrapy.Request(url, headers={'Referer':referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
+                    yield scrapy.Request(url, headers={'Referer': referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
-            self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
+            self.logger.error('parse fail, url={}, title="{}"'.format(response.url, item['title'].encode('gb18030')))
         else:
             yield item
 
