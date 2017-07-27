@@ -124,19 +124,21 @@ class CltestSpider(scrapy.Spider):
             item['image_urls'] = get_image_urls(div, item['type'])
             for a in div.css('a'):
                 style = a.css("::attr(style)")
-                url = a.css("::attr(href)")
-                if not style or not url:
+                url = a.css("::text")
+                referer_url = a.css("::attr(href)")
+                if not style or not url or not referer_url:
                     continue
-                url = url.extract()[0]
                 style = style.extract()[0]
+                url = url.extract()[0]
+                referer_url = referer_url.extract()[0]
                 if ('http://www.' in url) and ('color:#008000;' in style):
                     #self.logger.debug('url={0}, style={1}'.format(url, style))
                     offer = url.find('http://www.')
                     url = url[offer:]
                     item['download_url'] = url
                     meta = {'item': item}
-                    self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
-                    yield scrapy.Request(url, callback=self.parse_download, meta=meta, dont_filter=True)
+                    # self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
+                    yield scrapy.Request(url, headers={'Referer':referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
             self.logger.warning('parse error title={0}, url={1}'.format(item['title'], response.url))
         else:
@@ -155,5 +157,5 @@ class CltestSpider(scrapy.Spider):
             item['file_urls'] = [urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)]
         except Exception as e:
             self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
-        self.logger.info('file_urls={}'.format(item.get('file_urls')))
+        # self.logger.info('file_urls={}'.format(item.get('file_urls')))
         yield item

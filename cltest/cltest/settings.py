@@ -109,7 +109,7 @@ LOG_FORMAT = '%(asctime)s [%(levelname)s] %(filename)s:%(funcName)s#%(lineno)d: 
 
 LOG_LEVEL = 'DEBUG'
 LOG_LEVEL = 'INFO'
-#LOG_LEVEL = 'ERROR'
+LOG_LEVEL = 'ERROR'
 
 #CONCURRENT_ITEMS = 100 #100
 #CONCURRENT_REQUESTS = 16 #16
