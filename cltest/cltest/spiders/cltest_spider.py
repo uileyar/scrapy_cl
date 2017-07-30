@@ -122,25 +122,37 @@ class CltestSpider(scrapy.Spider):
         if div:
             item['detail_url'] = response.url
             item['image_urls'] = get_image_urls(div, item['type'])
+            download_urls = []
             for a in div.css('a'):
                 style = a.css("::attr(style)")
-                url = a.css("::text")
                 referer_url = a.css("::attr(href)")
-                if not style or not url or not referer_url:
+                text = a.css("::text")
+                if not style or not referer_url or not text:
                     continue
                 style = style.extract()[0]
-                url = url.extract()[0]
                 referer_url = referer_url.extract()[0]
-                if ('http://' in url) and (('color:#008000;' in style) or ('rgb(0, 128, 0)' in style)):
-                    # self.logger.debug('url={0}, style={1}'.format(url, style))
-                    # offer = url.find('http://www.')
-                    # url = url[offer:]
-                    item['download_url'] = url
-                    meta = {'item': item}
-                    # self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
-                    yield scrapy.Request(url, headers={'Referer': referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
+                text = text.extract()[0]
+                if ('color:#008000;' in style) or ('rgb(0, 128, 0)' in style):
+                    if 'http://' not in text:
+                        if 'rmdown' in referer_url:
+                            referer_query = urlparse.urlparse(referer_url).query
+                            referer_query = urlparse.urlparse(referer_query).query
+                            hash_data = urlparse.parse_qs(referer_query, True).get('hash')
+                            if not hash_data:
+                                continue
+                            download_urls.append('http://www.rmdown.com/link.php?hash={}'.format(hash_data[0]))
+                            # logging.error('k1 text={}, url={}'.format(text.encode('gb18030'), url))
+                        else:
+                            continue
+                    else:
+                        download_urls.append(text)
+            if download_urls:
+                item['download_url'] = download_urls[-1]
+                meta = {'item': item}
+                # self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
+                yield scrapy.Request(item['download_url'], headers={'Referer': referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
-            self.logger.error('parse fail, url={}, title="{}"'.format(response.url, item['title'].encode('gb18030')))
+            self.logger.error('parse fail, url={}  title="{}"'.format(response.url, item['title'].encode('gb18030')))
         else:
             yield item
 
