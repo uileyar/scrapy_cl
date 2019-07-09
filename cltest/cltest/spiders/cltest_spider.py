@@ -1,28 +1,24 @@
 #!/usr/bin/env python
 # coding:utf-8
-import sys
-import urllib
-import urlparse
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+from urllib import parse
 import scrapy
 from cltest.items import CltestItem
-from util import *
+from cltest.spiders.util import *
 
 # scrapy crawl cl -L INFO
 
-CLTEST_HOST = 'cl.5jm.win'
-CL_MAX_PAGE = 3
+CLTEST_HOST = 'cl.62k.site'
+CL_MAX_PAGE = 4
 
 TYPE_DEFAULT = 'hh'
 FOLDER_MAP = {
     # 'wm': {'fid': '2', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouwuma'},
-    #'xsd': {'fid': '8', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'xinshidai'},
+    # 'xsd': {'fid': '8', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'xinshidai'},
     'ym': {'fid': '15', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'yazhouyouma'},
     # 'gder': {'fid': '16', 'num': 999, 'max_page': 1, 'd_url': False, 'intro': 'gaidaer'},
-    # 'gcyc': {'fid': '25', 'num': 6, 'max_page': CL_MAX_PAGE, 'intro': 'guochanyuanchuang'},
-    'zzyc': {'fid': '26', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'zhongziyuanchuang'},
+    'gcyc': {'fid': '25', 'num': 8, 'max_page': CL_MAX_PAGE, 'intro': 'guochanyuanchuang'},
+    'zzyc': {'fid': '26', 'num': 1, 'max_page': CL_MAX_PAGE*2, 'intro': 'zhongziyuanchuang'},
     TYPE_DEFAULT: {'fid': 'default', 'num': 1, 'max_page': CL_MAX_PAGE, 'intro': 'default'},
 }
 
@@ -31,21 +27,21 @@ ad_img_list = [
     'http://kk.51688.cc/ya/xv92.jpg',
     'http://kk.51688.cc/ya/283076.jpg',
     'http://dio66.net/images/olo_1000x80.jpg',
-    #'http://dio889.net/images/blr-880-80-4.jpg',
+    # 'http://dio889.net/images/blr-880-80-4.jpg',
 ]
 
 
 def get_page(url):
-    query = urlparse.urlparse(url).query
-    page = urlparse.parse_qs(query, True).get('page')
+    query = parse.urlparse(url).query
+    page = parse.parse_qs(query, True).get('page')
     if page:
         return int(page[0])
     return 0
 
 
 def get_type(url):
-    query = urlparse.urlparse(url).query
-    fid = urlparse.parse_qs(query, True).get('fid')[0]
+    query = parse.urlparse(url).query
+    fid = parse.parse_qs(query, True).get('fid')[0]
     for f_type, v in FOLDER_MAP.items():
         if v.get('fid') == fid:
             return f_type
@@ -140,13 +136,14 @@ class CltestSpider(scrapy.Spider):
                 if ('color:#008000;' in style) or ('rgb(0, 128, 0)' in style):
                     if 'http://' not in text:
                         if 'rmdown' in referer_url:
-                            referer_query = urlparse.urlparse(referer_url).query
-                            referer_query = urlparse.urlparse(referer_query).query
-                            hash_data = urlparse.parse_qs(referer_query, True).get('hash')
+                            referer_query = parse.urlparse(referer_url).query
+                            referer_query = parse.urlparse(referer_query).query
+                            hash_data = parse.parse_qs(referer_query, True).get('hash')
                             if not hash_data:
                                 continue
                             download_urls.append('http://www.rmdown.com/link.php?hash={}'.format(hash_data[0]))
                             # logging.error('k1 text={}, url={}'.format(text.encode('gb18030'), url))
+                            # logging.error('k1 text={}, url={}'.format(text, url))
                         else:
                             continue
                     else:
@@ -157,13 +154,13 @@ class CltestSpider(scrapy.Spider):
                 # self.logger.info('detail_url={0}, url={1}'.format(item['detail_url'], url))
                 yield scrapy.Request(item['download_url'], headers={'Referer': referer_url}, callback=self.parse_download, meta=meta, dont_filter=True)
         if not item.get('download_url') and FOLDER_MAP.get(item['type']).get('d_url', True):
-            self.logger.error('parse fail, url={}  title="{}"'.format(response.url, item['title'].encode('gb18030')))
+            self.logger.error('parse fail, url={}  title="{}"'.format(response.url, item['title']))
         else:
             yield item
 
     def parse_download(self, response):
         # save_file(os.path.join('/data', response.url.replace('/', '-')), response.body)
-        # print 'item={0},  url={1}'.format(response.meta.get('item'), response.url)
+        # print('item={0},  url={1}'.format(response.meta.get('item'), response.url))
         # print(response.body)
         item = response.meta['item']
         query = {}
@@ -171,8 +168,7 @@ class CltestSpider(scrapy.Spider):
             action = response.css('form::attr(action)').extract()[0]
             for input in response.css('input'):
                 query[input.css('::attr(name)').extract()[0]] = input.css('::attr(value)').extract()[0]
-            item['file_urls'] = [urlparse.urljoin(response.url, action) + '?' + urllib.urlencode(query)]
+            item['file_urls'] = [parse.urljoin(response.url, action) + '?' + parse.urlencode(query)]
         except Exception as e:
-            self.logger.error('parse_download fail:url={0}, detail_url={1}'.format(response.url, item['detail_url']))
-        # self.logger.info('file_urls={}'.format(item.get('file_urls')))
+            self.logger.error(f'parse_download fail:error={str(e)}, url={response.url}, detail_url={item["detail_url"]}')
         yield item

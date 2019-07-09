@@ -6,21 +6,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 import pymongo
 import scrapy
 import time
-from spiders.util import *
-from scrapy.pipelines.images import ImagesPipeline, FilesPipeline
-from scrapy.exceptions import DropItem
 import httplib2
 import shutil
-
+from scrapy.pipelines.images import ImagesPipeline, FilesPipeline
+from scrapy.exceptions import DropItem
 from scrapy.http import Request
 from scrapy.utils.python import to_bytes
+from cltest.spiders.util import *
+
 
 MAX_FILE_LEN = 96
 
@@ -36,18 +32,13 @@ def get_file(url, file_path):
                 continue
             save_file(file_path, content)
             return True
-        except Exception, e:
+        except Exception as e:
             logging.error("fail:{0}".format(e))
     return False
 
 
 def get_file_name(str_name, suffix_num, max_len=MAX_FILE_LEN):
-    if isinstance(str_name, unicode):
-        pass
-        # logging.info('{} is unicode'.format(str_name))
-    if isinstance(str_name, str):
-        pass
-        # logging.info('{} is str'.format(str_name))
+    # logging.info('str_name={}'.format(str_name))
     if suffix_num > 0:
         max_len -= 1
     new_name = str_name[0:min(max_len, len(str_name))].replace('/', '-')
@@ -95,9 +86,9 @@ class CltestPipeline(object):
         it = self.db[collection_name].find_one({'detail_url': item.get('detail_url')})
 
         if it and len(item_images) == len(it.get('images', [])) and len(item_files) == len(it.get('files', [])):
-            #raise DropItem()
+            # raise DropItem()
             pass
-        #logging.info('item={}'.format(item))
+        # logging.info('item={}'.format(item))
         item['create_time'] = time.strftime('%y%m%d', time.localtime(time.time()))
         des_dir = os.path.join(self.root_path, item['create_time'], item.get('type'))
         ensure_dir(des_dir)
